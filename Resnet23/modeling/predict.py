@@ -1,30 +1,41 @@
-from pathlib import Path
+import sys
 
-from loguru import logger
-from tqdm import tqdm
-import typer
+from PIL import Image
+import torch
+from torchvision import transforms
 
-from Resnet23.config import MODELS_DIR, PROCESSED_DATA_DIR
+from Resnet23.config import CLASS_NAMES, IMAGE_SIZE, NUM_CLASSES
+from Resnet23.resnet23 import resnet23
 
-app = typer.Typer()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Load the trained model
+model = resnet23(num_classes=NUM_CLASSES)
+model.load_state_dict(torch.load("resnet23_cifar.pth", map_location=device))
+model.to(device)
+model.eval()
 
-@app.command()
-def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    features_path: Path = PROCESSED_DATA_DIR / "test_features.csv",
-    model_path: Path = MODELS_DIR / "model.pkl",
-    predictions_path: Path = PROCESSED_DATA_DIR / "test_predictions.csv",
-    # -----------------------------------------
-):
-    # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Performing inference for model...")
-    for i in tqdm(range(10), total=10):
-        if i == 5:
-            logger.info("Something happened for iteration 5.")
-    logger.success("Inference complete.")
-    # -----------------------------------------
+# Define the transform to apply to input images
+transform = transforms.Compose([
+    transforms.Resize(IMAGE_SIZE),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+])
 
+def predict(image_path):
+    image = Image.open(image_path).convert("RGB")
+    image = transform(image).unsqueeze(0)  # Add batch dimension
+    image = image.to(device)
+
+    with torch.no_grad():
+        outputs = model(image)
+        _, predicted = torch.max(outputs, 1)
+        class_idx = predicted.item()
+        class_name = CLASS_NAMES[class_idx]
+        print(f"Predicted class: {class_name}")
 
 if __name__ == "__main__":
-    app()
+    if len(sys.argv) != 2:
+        print("Usage: python predict.py path_to_image")
+        sys.exit(1)
+    predict(sys.argv[1])

@@ -1,32 +1,30 @@
-from pathlib import Path
+# config.py
 
-from dotenv import load_dotenv
-from loguru import logger
+# Path to processed dataset (after downsampling)
+DATA_DIR = "data/processed"
 
-# Load environment variables from .env file if it exists
-load_dotenv()
+# CIFAR-10 class names
+CLASS_NAMES = [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+]
 
-# Paths
-PROJ_ROOT = Path(__file__).resolve().parents[1]
-logger.info(f"PROJ_ROOT path is: {PROJ_ROOT}")
+# Target image size (CIFAR-10 is already 32x32, but useful for resizing if needed)
+IMAGE_SIZE = (32, 32)
 
-DATA_DIR = PROJ_ROOT / "data"
-RAW_DATA_DIR = DATA_DIR / "raw"
-INTERIM_DATA_DIR = DATA_DIR / "interim"
-PROCESSED_DATA_DIR = DATA_DIR / "processed"
-EXTERNAL_DATA_DIR = DATA_DIR / "external"
+# Model configuration (example — useful for training/eval scripts later)
+NUM_CLASSES = 10
+BATCH_SIZE = 64
+RANDOM_SEED = 42
 
-MODELS_DIR = PROJ_ROOT / "models"
-
-REPORTS_DIR = PROJ_ROOT / "reports"
-FIGURES_DIR = REPORTS_DIR / "figures"
-
-# If tqdm is installed, configure loguru with tqdm.write
-# https://github.com/Delgan/loguru/issues/135
-try:
-    from tqdm import tqdm
-
-    logger.remove(0)
-    logger.add(lambda msg: tqdm.write(msg, end=""), colorize=True)
-except ModuleNotFoundError:
-    pass
+# Paths to store model checkpoints, logs, etc. (optional)
+MODEL_DIR = "models"
+LOG_DIR = "reports/logs"

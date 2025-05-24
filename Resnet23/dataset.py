@@ -1,29 +1,45 @@
-from pathlib import Path
+import os
 
-from loguru import logger
-from tqdm import tqdm
-import typer
+from PIL import Image
+from torch.utils.data import Dataset
+from torchvision import transforms
 
-from Resnet23.config import PROCESSED_DATA_DIR, RAW_DATA_DIR
-
-app = typer.Typer()
+from .config import CLASS_NAMES, IMAGE_SIZE
 
 
-@app.command()
-def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    input_path: Path = RAW_DATA_DIR / "dataset.csv",
-    output_path: Path = PROCESSED_DATA_DIR / "dataset.csv",
-    # ----------------------------------------------
-):
-    # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Processing dataset...")
-    for i in tqdm(range(10), total=10):
-        if i == 5:
-            logger.info("Something happened for iteration 5.")
-    logger.success("Processing dataset complete.")
-    # -----------------------------------------
+class CIFARCustomDataset(Dataset):
+    def __init__(self, root_dir, transform=None):
 
+        self.root_dir = root_dir
+        self.transform = transform
+        self.image_paths = []
+        self.labels = []
 
-if __name__ == "__main__":
-    app()
+        for label_idx, class_name in enumerate(CLASS_NAMES):
+            class_dir = os.path.join(root_dir, class_name)
+            if not os.path.isdir(class_dir):
+                continue
+            for filename in os.listdir(class_dir):
+                if filename.endswith(".png"):
+                    self.image_paths.append(os.path.join(class_dir, filename))
+                    self.labels.append(label_idx)
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        img_path = self.image_paths[idx]
+        label = self.labels[idx]
+        image = Image.open(img_path).convert("RGB")
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
+
+def get_default_transform():
+    return transforms.Compose([
+        transforms.Resize(IMAGE_SIZE),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ])
