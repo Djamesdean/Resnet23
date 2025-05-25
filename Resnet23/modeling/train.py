@@ -4,15 +4,15 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from Resnet23.config import BATCH_SIZE, DATA_DIR, NUM_CLASSES, RANDOM_SEED
-from Resnet23.dataset import CIFARCustomDataset, get_default_transform
+from Resnet23.dataset import Cifar_Custom, get_default_transform
 from Resnet23.modeling.Model23 import resnet23
 
 torch.manual_seed(RANDOM_SEED)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Prepare dataset and dataloaders
-train_dataset = CIFARCustomDataset(root_dir=f"{DATA_DIR}/train", transform=get_default_transform())
-test_dataset = CIFARCustomDataset(root_dir=f"{DATA_DIR}/test", transform=get_default_transform())
+train_dataset = Cifar_Custom(root_dir=f"{DATA_DIR}/train", transform=get_default_transform())
+test_dataset = Cifar_Custom(root_dir=f"{DATA_DIR}/test", transform=get_default_transform())
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
@@ -56,7 +56,7 @@ def evaluate():
             correct += (predicted == labels).sum().item()
     print(f"Test Accuracy={correct/total:.4f}")
 
-def main(num_epochs=10):
+def main(num_epochs=20):
     for epoch in range(1, num_epochs + 1):
         train_one_epoch(epoch)
         evaluate()

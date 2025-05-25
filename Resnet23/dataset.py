@@ -7,7 +7,7 @@ from torchvision import transforms
 from .config import CLASS_NAMES, IMAGE_SIZE
 
 
-class CIFARCustomDataset(Dataset):
+class Cifar_Custom(Dataset):
     def __init__(self, root_dir, transform=None):
 
         self.root_dir = root_dir
