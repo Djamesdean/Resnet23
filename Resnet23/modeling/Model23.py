@@ -38,9 +38,9 @@ class ResNet(nn.Module):
         self.in_channels = 64
         
         # Initial convolution with proper initialization
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
         
         # Residual layers - flexible configuration
         self.layer1 = self._make_layer(block, 64, layers[0], dropout_rate=dropout_rate)
@@ -50,7 +50,7 @@ class ResNet(nn.Module):
         
         # Final layers
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.dropout_final = nn.Dropout(0.5)
+        self.dropout_final = nn.Dropout(0.2)
         self.fc = nn.Linear(512, num_classes)
         
         # Initialize weights
@@ -85,17 +85,17 @@ class ResNet(nn.Module):
                 nn.init.constant_(m.bias, 0)
     
     def forward(self, x):
-        # Initial processing
+        
         x = F.relu(self.bn1(self.conv1(x)), inplace=True)
-        x = self.maxpool(x)
+        
         
         # Residual blocks
-        x = self.layer1(x)  # 3 blocks → 6 conv layers
-        x = self.layer2(x)  # 3 blocks → 6 conv layers  
-        x = self.layer3(x)  # 3 blocks → 6 conv layers
-        x = self.layer4(x)  # 2 blocks → 4 conv layers
+        x = self.layer1(x)  
+        x = self.layer2(x)  
+        x = self.layer3(x)  
+        x = self.layer4(x)  
         
-        # Final classification
+        
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.dropout_final(x)
