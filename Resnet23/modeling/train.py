@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader, random_split
 
 from Resnet23.config import BATCH_SIZE, DATA_DIR, NUM_CLASSES, RANDOM_SEED
 from Resnet23.dataset import Cifar_Custom, get_default_transform
+from Resnet23.modeling.matrics import evaluate_metrics
 from Resnet23.modeling.Model23 import resnet23
 
 torch.manual_seed(RANDOM_SEED)
@@ -82,8 +83,9 @@ def evaluate():
 def main(num_epochs=5):
     for epoch in range(1, num_epochs + 1):
         train_one_epoch(epoch)
-        validate()  # ✅ Run validation after each epoch
+        validate() 
     evaluate()
+    evaluate_metrics(model, test_loader, device, NUM_CLASSES)
     torch.save(model.state_dict(), "models/resnet23_cifar.pth")
 
 if __name__ == "__main__":
