@@ -26,7 +26,7 @@ def downsample_and_prepare_cifar10(output_dir=DATA_DIR, max_per_class=500):
             os.makedirs(class_dir, exist_ok=True)
 
             img_path = os.path.join(class_dir, f"{counter[label]}.png")
-            resized_img = transforms.Resize(IMAGE_SIZE)(to_pil(img))
+            resized_img = transforms.Resize(IMAGE_SIZE)(img)
             resized_img.save(img_path)
             counter[label] += 1
 
