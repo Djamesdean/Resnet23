@@ -37,6 +37,19 @@ class Cifar_Custom(Dataset):
 
         return image, label
 
+
+def get_train_transform():
+    return transforms.Compose([
+        transforms.RandomHorizontalFlip(p=0.5),               # Flip image horizontally
+        transforms.RandomApply([
+            transforms.ColorJitter(0.2, 0.2, 0.2, 0.1)         # Random brightness, contrast, saturation, hue
+        ], p=0.5),
+        transforms.RandomAffine(degrees=15, translate=(0.1, 0.1)),  # Small rotation + translation
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalize to [-1, 1]
+    ])
+
+
 def get_default_transform():
     return transforms.Compose([
         transforms.Resize(IMAGE_SIZE),
