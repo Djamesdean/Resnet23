@@ -102,7 +102,7 @@ def main(num_epochs=10):
     
     logger = setup_experiment()
     if not logger:
-        print("❌ Failed to setup experiment. Exiting...")
+        print("❌ Failed to setup experiment...")
         return
 
     with mlflow.start_run():

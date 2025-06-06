@@ -35,7 +35,7 @@ def evaluate_metrics(model, dataloader, device, num_classes):
     # Classification report
     report = classification_report(all_labels, all_preds, output_dict=True)
     for class_label, class_metrics in report.items():
-        if isinstance(class_metrics, dict):  # skip 'accuracy' which is float
+        if isinstance(class_metrics, dict):  
             for metric_name, value in class_metrics.items():
                 mlflow.log_metric(f"{class_label}_{metric_name}", value)
 
@@ -52,7 +52,7 @@ def evaluate_metrics(model, dataloader, device, num_classes):
     plt.close()
     mlflow.log_artifact(fig_path)
 
-    # mAP (macro-average over all classes)
+    # mAP 
     mAP = average_precision_score(one_hot_labels, all_probs, average="macro")
     mlflow.log_metric("mean_average_precision", mAP)
     print(f"Mean Average Precision (mAP): {mAP:.4f}")
