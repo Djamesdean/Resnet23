@@ -255,10 +255,59 @@ The main reason why the model gave us a high **training accuracy** and lower **t
 ## Update 2.0 
 
 ### 1. Added Validation Split and Evaluation 
-•	The training dataset is now split into training (80%) and validation (20%) using torch.utils.data.random_split.
-	•	A new validate(epoch) function was implemented to:
-	    •	Evaluate validation accuracy and loss per epoch
-	    •	Log them to DagsHub using MLflow
-	•	Train/val datasets now apply different transforms:
-	•	Augmented transforms for training
-	•	Plain normalization for validation
+
+- The original dataset is now split into training and validation sets using `torch.utils.data.random_split`.
+- A new `validate(epoch)` method was introduced to compute validation metrics per epoch.
+- Train/val dataset now apply different transforms :
+    - train set uses `get_train_transform`
+    val uses `get_default_transform`
+
+- Why We Did This ?
+
+    - To monitor generalization and prevent overfitting during training.
+### 2. Added matrics to Compute Evaluation Metrics
+A new `metrics.py` file was added to compute and log:
+- Precision, Recall, F1-score per class
+- Mean Average Precision (mAP) using average_precision_score
+- Confusion Matrix as a visual artifact (confusion_matrix.png)
+- All metrics are automatically logged to DagsHub via MLflow
+Why We Did This ?
+    -  Accuracy alone is not enough; we need per-class evaluation.
+    - mAP is useful to evaluate how well the model ranks predictions.
+    - Confusion matrix helps visualize class-wise performance.
+
+### 3. Full Experiment Tracking with DagsHub and MLflow
+
+
+- mlflow.start_run() is used to log:
+    -  Model parameters (batch_size, optimizer, learning_rate, epochs)
+    - Per-epoch metrics (train/val loss & accuracy)
+    - Final model file and confusion matrix
+    - Precision/recall/F1/mAP after training
+
+- Configuration:
+    - DagsHub MLflow tracking URI is set using:
+    `mlflow.set_tracking_uri("https://dagshub.com/<username>/<repo>.mlflow")`
+- Model artifacts saved to:
+`torch.save(model.state_dict(), "models/resnet23_cifar.pth")
+mlflow.log_artifact("models/resnet23_cifar.pth")`
+- Why We Did This ?
+    - Enables reproducibility and remote experiment tracking.
+    - Keeps track of hyperparameters, model artifacts, and validation/test performance.
+
+### 4. Added Image Augmentation for Better Generalization
+- A new function get_train_transform() was added to apply YOLO-style data augmentation:
+    - RandomHorizontalFlip
+    - ColorJitter (brightness, contrast, saturation, hue)
+    - RandomAffine (rotation and translation)
+- Applied only to the training set, not to validation/test sets
+- Why we did this ?
+    - Boosts model generalization on unseen data.
+    - Makes the network robust to variations like rotation, brightness, and alignment.
+    - prevent overfitting 
+
+### Results Discussion :
+- everything now could be tracked throught the repo in the dagsuhb page that could be found in this link :
+[Resnet23_Expirement](https://dagshub.com/Djamesdean/Resnet23)
+- the confusion matrix graph could be found in :
+[Confusion Matrix](reports/figures/confusion_matrix.png)

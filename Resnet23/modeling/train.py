@@ -10,6 +10,7 @@ from Resnet23.modeling.matrics import evaluate_metrics
 from Resnet23.modeling.Model23 import resnet23
 
 torch.manual_seed(RANDOM_SEED)
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load full training dataset
