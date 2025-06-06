@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader, random_split
 
 from Resnet23.config import BATCH_SIZE, DATA_DIR, NUM_CLASSES, RANDOM_SEED, setup_experiment
 from Resnet23.dataset import Cifar_Custom, get_default_transform, get_train_transform
+from Resnet23.modeling.matrics import evaluate_metrics
 from Resnet23.modeling.Model23 import resnet23
 
 torch.manual_seed(RANDOM_SEED)
@@ -14,7 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Load full training dataset
 full_train_dataset = Cifar_Custom(root_dir=f"{DATA_DIR}/train", transform=None)
 
-# ✅ Split into training and validation sets
+# Split into training and validation sets
 train_size = int(0.8 * len(full_train_dataset))
 val_size = len(full_train_dataset) - train_size
 train_dataset, val_dataset = random_split(full_train_dataset, [train_size, val_size])
@@ -27,16 +28,12 @@ val_dataset.dataset.transform = get_default_transform()
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# Load test set as before
 test_dataset = Cifar_Custom(root_dir=f"{DATA_DIR}/test", transform=get_default_transform())
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# Model
 model = resnet23(num_classes=NUM_CLASSES).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-
 
 def train_one_epoch(epoch):
     model.train()
@@ -63,7 +60,7 @@ def train_one_epoch(epoch):
     mlflow.log_metric("train_loss", train_loss, step=epoch)
     mlflow.log_metric("train_accuracy", train_acc, step=epoch)
 
-# ✅ NEW: Validation function
+# NEW: Validation function
 def validate(epoch):
     model.eval()
     correct = 0
@@ -121,7 +118,8 @@ def main(num_epochs=10):
 
         evaluate()
 
-        # Save model
+        evaluate_metrics(model, test_loader, device, NUM_CLASSES)
+        
         model_path = "models/resnet23_cifar.pth"
         torch.save(model.state_dict(), model_path)
         mlflow.log_artifact(model_path)

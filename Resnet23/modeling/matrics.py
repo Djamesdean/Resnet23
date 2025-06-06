@@ -1,4 +1,7 @@
+import os
+
 import matplotlib.pyplot as plt
+import mlflow
 import numpy as np
 import seaborn as sns
 from sklearn.metrics import average_precision_score, classification_report, confusion_matrix
@@ -27,20 +30,29 @@ def evaluate_metrics(model, dataloader, device, num_classes):
     all_preds = torch.cat(all_preds).numpy()
     all_probs = torch.cat(all_probs).numpy()
 
-    # Classification report: precision, recall, f1
-    print("\nClassification Report:")
-    print(classification_report(all_labels, all_preds, target_names=[str(i) for i in range(num_classes)]))
-
-    # Confusion matrix
-    cm = confusion_matrix(all_labels, all_preds)
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
-    plt.title("Confusion Matrix")
-    plt.xlabel("Predicted")
-    plt.ylabel("Actual")
-    plt.show()
-
-    # mAP (mean average precision)
     one_hot_labels = np.eye(num_classes)[all_labels]
+
+    # Classification report
+    report = classification_report(all_labels, all_preds, output_dict=True)
+    for class_label, class_metrics in report.items():
+        if isinstance(class_metrics, dict):  # skip 'accuracy' which is float
+            for metric_name, value in class_metrics.items():
+                mlflow.log_metric(f"{class_label}_{metric_name}", value)
+
+    # Confusion Matrix
+    cm = confusion_matrix(all_labels, all_preds)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+    ax.set_title("Confusion Matrix")
+    ax.set_xlabel("Predicted Label")
+    ax.set_ylabel("True Label")
+    os.makedirs("reports/figures", exist_ok=True)
+    fig_path = "reports/figures/confusion_matrix.png"
+    plt.savefig(fig_path)
+    plt.close()
+    mlflow.log_artifact(fig_path)
+
+    # mAP (macro-average over all classes)
     mAP = average_precision_score(one_hot_labels, all_probs, average="macro")
-    print(f"\nMean Average Precision (mAP): {mAP:.4f}")
+    mlflow.log_metric("mean_average_precision", mAP)
+    print(f"Mean Average Precision (mAP): {mAP:.4f}")

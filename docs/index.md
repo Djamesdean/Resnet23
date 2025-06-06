@@ -42,9 +42,9 @@ This project implements an **image classification pipeline** using a **custom Re
     │
     ├── __init__.py             <- Makes Resnet23 a Python module
     │
-    ├── config.py               <- Store useful variables and configuration
+    ├── config.py               <- Store useful variables and configuration and dagshub access 
     │
-    ├── dataset.py              <- Scripts to download or generate data
+    ├── datadownload.py              <- Scripts to download data
     │
     ├── features.py             <- Code to create features for modeling
     │
@@ -251,3 +251,14 @@ python Resnet23/train.py
 The main reason why the model gave us a high **training accuracy** and lower **test accuracy** is that the model was too powerful for our small dataset so it memorized our data which lead us to have a significant difference betweeen train and test .
 - **Solution** : train it on more data will resolve the issue .
 
+--- 
+## Update 2.0 
+
+### 1. Added Validation Split and Evaluation 
+•	The training dataset is now split into training (80%) and validation (20%) using torch.utils.data.random_split.
+	•	A new validate(epoch) function was implemented to:
+	    •	Evaluate validation accuracy and loss per epoch
+	    •	Log them to DagsHub using MLflow
+	•	Train/val datasets now apply different transforms:
+	•	Augmented transforms for training
+	•	Plain normalization for validation
